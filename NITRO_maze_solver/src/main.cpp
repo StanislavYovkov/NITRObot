@@ -32,7 +32,7 @@ const int LedPin = 33;
 // Robot parameters:
 const int RobotLenght = 25;     // реални размери 25.0 см.
 const int robotWidth = 16;      // реални размери 16.7 см.
-const int brakingDistance = 15; // спирачен път в см.
+const int brakingDistance = 10; // спирачен път в см.
 // Maze parameters:
 const int MazeCorridorWidth = 50; //   ШИРОЧИНАТА НА КОРИДОРЕ  Е 3 ШИРИНИ НА РОБОТА = 50см. (robotWidth * 3) + 2;
 
@@ -48,7 +48,7 @@ const float CenterLineTolerance = 2.5; // plus/minus how many cm are acceptable 
 const float SharpTurnTreshold = 15.0;  // TODO Да се определи спрямо размера робота и коридора !!!!!
 
 //? От тук задаваме дали ще следваме дясна или лява стена за да е универсале алгоритъма
-const int WallFollowingSide = -70; //Set: -90 for right wall following or +90 for left wall following
+const int WallFollowingSide = -90; //Set: -90 for right wall following or +90 for left wall following
                                    //we will add this value to the servo position i.e. myservo.write(90 + WallFollowingSide);
                                    // in order to set to which side the servo should move (0 or 180 degrees)
 //Servo parameters
@@ -57,15 +57,15 @@ const int SideServoAngle = FrontServoAngle + WallFollowingSide; //(0 or 180 degr
 const int FrontServoDelay = 150;
 const int SideServoDelay = 150;
 
-const int SpeedLeft = 90 * 1;
-const int SpeedRight = 90 * 1; // corection
+const int LeftSpeed = 90;
+const int RightSpeed = 90;
 
 // Тук започват ГЛОБАЛНИТЕ променливи, които се използват в кода:
 // променливите започват с малка буква, а всяка следваща дума с главна буква
 // ....
 float maxDistance = 130;
-int speedLeft = SpeedLeft;
-int speedRight = SpeedRight;
+int speedLeft = LeftSpeed;
+int speedRight = RightSpeed;
 bool directionCompensation = false;
 // Тук инициализираме обектите:
 Servo myservo;
@@ -94,20 +94,8 @@ void setup()
   myservo.attach(ServoPin);
   myservo.write(90); //Move the servo to center position
 
-  // Проба десен завой - РАДИУС
-
-  // for (int i = 0; i <= 255; i++)
-  // {
-  //   speedLeft = 100;
-  //   speedRight = 100;
-  //   moveForward();
-  //   delay(20);
-  //   speedLeft = 255;
-  //   speedRight = 0;
-  //   moveForward();
-  //   delay(80);
-  // }
-  // Край на пробата
+  moveForward();
+  delay(500);
 }
 
 //---------------------------------------------------------
@@ -129,16 +117,14 @@ void loop()
   // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
-  Serial.println(sideDistance);
-  // stopMoving();  //
-  // delay(40);     //   частично движение по посока на робота
-  // moveForward(); //
-
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
+  Serial.println(sideDistance);
+  if (frontDistance <= WallToCorridorMiddle - brakingDistance) //Стената отпред е близко SideCorridorTreshold
 
-  if (frontDistance <= WallToCorridorMiddle) //Стената отпред е близко SideCorridorTreshold
   {
+    digitalWrite(LedPin, LOW);
     currentState = 1; // turn
+
     //------------------------------------------
     //if (sideDistance < SideCorridorTreshold)
     //{
@@ -154,74 +140,67 @@ void loop()
     // }
     //----------------------------------------------
   }
-  else if (frontDistance > FrontDistanceTreshold - brakingDistance) //Стената отпред е далече
+  else if (frontDistance >= 50) //Стената отпред е далече
   {
-    if (sideDistance >= SideCorridorTreshold)
+    digitalWrite(LedPin, LOW);
+    if (sideDistance >= 50) //SideCorridorTreshold
     {
       // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold)
       // - завой на 90 градуса надясно/наляво
 
       currentState = 3; // turn 90 degrees
     }
-    else if (sideDistance < 50) // В коридора сме!
+  }
+
+  else if (sideDistance < 50) // В коридора сме!
+
+  {
+
+    digitalWrite(LedPin, HIGH);
+    if (24 < sideDistance && sideDistance < 26) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
     {
-      if (sideDistance < 23 && sideDistance > 27)  //(sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
-      {
-        // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
-        // от централната линия сме  - движение право напред
+      // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
+      // от централната линия сме  - движение право напред
 
-        currentState = 4; //Close to the centerline - go forwad
-      }
-      else if (sideDistance >= 35) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
-      {
-        // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
-        // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
-
-        currentState = 5; //Close to the other wall - hard turn to centerline
-      }
-      else if (sideDistance <= 15)  //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
-      {
-        // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
-        //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
-
-        currentState = 6; //Close to the wall we are following - hard turn to centerline
-      }
-      else if (sideDistance >27  && sideDistance < 35)  //(sideDistance > WallToCorridorMiddle + CenterLineTolerance && sideDistance < WallToCorridorMiddle + SharpTurnTreshold)
-      {
-        // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance
-        //  от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
-
-        currentState = 7; //Close to the wall we are following - hard turn to centerline
-      }
+      currentState = 4; //Close to the centerline - go forwad
     }
-    else if (sideDistance < 23 && sideDistance > 15) //(sideDistance < WallToCorridorMiddle - CenterLineTolerance && sideDistance > WallToCorridorMiddle - SharpTurnTreshold)
+    else if (35 > sideDistance && sideDistance >= 26) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
+    {
+      // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
+      // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
+
+      currentState = 5; //Close to the other wall - hard turn to centerline
+    }
+    else if (15 < sideDistance && sideDistance <= 24) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
+    {
+      // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
+      //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
+
+      currentState = 6; //Close to the wall we are following - hard turn to centerline
+    }
+    else if (sideDistance <= 15)
     {
       // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
-      //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко наляво/надясно
-
-      currentState = 8; //Close to the wall we are following - hard turn to centerline
+      //  въртим се с while докаро изправим робота
+      currentState = 7;
+    }
+    else if (sideDistance >= 35)
+    {
+      // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
+      //  въртим се с while докаро изправим робота
+      currentState = 8;
     }
   }
-  //  if (frontDistance > maxDistance  && sideDistance > maxDistance)
-  //  {
-  //     currentState = 9; //FINAL
-  // }
   switch (currentState)
   {
   case 1: /* завой на 90 градуса */
+    Serial.println(currentState);
     stopMoving();
-    //moveBackward();
-    //delay(200);
-    //makeSlightLeftTurn();
-    //delay(500);
-    while (frontDistance <= MazeCorridorWidth * 1.3)
-    {
-      makeSlightLeftTurn();
-      frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
-    }
+    makeSlightLeftTurn();
+    delay(550);
     directionCompensation = false;
-    speedLeft = SpeedLeft * 1.0;
-    speedRight = SpeedRight * 1.0;
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     break;
   // case 2: /* завой на 90 градуса надясно/наляво */
   //       stopMoving();
@@ -232,80 +211,76 @@ void loop()
   //   directionCompensation = false;
   //   break;
   case 3: /* завой на 90 градуса надясно/наляво */
-          // stopMoving();
-          // turnRight();
-          // delay(830);
-    while (sideDistance >= 50)
+    Serial.println(currentState);
+    stopMoving();
+    moveBackward();
+    delay(200);
+    for (size_t i = 0; i < 4; i++)
     {
-      // speedLeft = 130;
-      // speedRight = 130;
-      // moveForward();
-      // delay(10);
-      speedLeft = 200;
+      speedLeft = 100;
+      speedRight = 100;
+      moveForward();
+      delay(20);
+      speedLeft = 255;
       speedRight = 0;
       moveForward();
-      sideDistance = getDistance(SideServoAngle, SideServoDelay);
+      delay(200);
     }
+    // speedLeft = LeftSpeed * 1.0;
+    // speedRight = RightSpeed * 1.0;
+    // moveForward();
+    // delay(1500);
     directionCompensation = false;
-    speedLeft = SpeedLeft * 1.0;
-    speedRight = SpeedRight * 1.0;
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     break;
   case 4:
-    speedLeft = SpeedLeft * 1.0;
-    speedRight = SpeedRight * 1.0;
+    Serial.println(currentState);
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     directionCompensation = false;
     /* движение право напред */
     break;
   case 5:
+    Serial.println(currentState);
     /* движение напред с остър завой наляво/надясно */
-    speedLeft = SpeedLeft * 1.7;
-    speedRight = SpeedRight * .5;
+    speedLeft = LeftSpeed * 2.5;
+    speedRight = RightSpeed * .8;
     directionCompensation = true;
     break;
   case 6:
-    speedLeft = SpeedLeft * .5;
-    speedRight = SpeedRight * 1.7;
+    Serial.println(currentState);
+    speedLeft = LeftSpeed * .8;
+    speedRight = RightSpeed * 2.1;
     directionCompensation = true;
     /* движение напред с остър завой надясно/наляво */
     break;
   case 7:
-    // if (directionCompensation)
-    // {
-    //   speedLeft = SpeedLeft * .5;
-    //   speedRight = SpeedRight * 1.6;
-    // }
-    // else
-    // {
-    //   speedLeft = SpeedLeft * 1.5;
-    //   speedRight = SpeedRight * .5;
-    // }
-    // directionCompensation = false;
-    /* движение напред със завой леко наляво/надясно */
+    Serial.println(currentState);
+    stopMoving();
+    while (sideDistance <= 15)
+    {
+      makeSlightLeftTurn();
+      sideDistance = getDistance(SideServoAngle, SideServoDelay);
+    }
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     break;
   case 8:
-    // if (directionCompensation)
-    // {
-    //   speedLeft = SpeedLeft * 1.6;
-    //   speedRight = SpeedRight * .5;
-    // }
-    // else
-    // {
-    //   speedLeft = SpeedLeft * .5;
-    //   speedRight = SpeedRight * 1.5;
-    // }
-    directionCompensation = false;
-    /* движение напред със завой леко надясно/наляво */
+    Serial.println(currentState);
+    stopMoving();
+    while (sideDistance >= 35)
+    {
+      turnSlightRight();
+      sideDistance = getDistance(SideServoAngle, SideServoDelay);
+    }
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     break;
-    //  case 9:
-    //    stopMoving();
-    //    break;
   default:
     break;
   }
-
-  // stopMoving();  //
-  // delay(40);     //  частично движение по посока на робота
-  moveForward(); //
+  moveForward();
 }
 //==================================== VOID =====================================================
 
@@ -343,10 +318,10 @@ void makeSlightLeftTurn()
 
 void turnSlightRight()
 {
-  analogWrite(LEFT_FOR, 100);
+  analogWrite(LEFT_FOR, 110);
   analogWrite(LEFT_BACK, LOW);
   analogWrite(RIGHT_FOR, LOW);
-  analogWrite(RIGHT_BACK, 100);
+  analogWrite(RIGHT_BACK, 90);
 }
 
 void stopMoving()
