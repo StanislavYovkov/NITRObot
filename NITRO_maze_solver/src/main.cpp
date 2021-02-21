@@ -117,10 +117,10 @@ void loop()
   // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
-  frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
   Serial.println(sideDistance);
-  if (frontDistance <= WallToCorridorMiddle - brakingDistance) //Стената отпред е близко SideCorridorTreshold
-
+  frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
+  Serial.println(frontDistance);
+  if (frontDistance <= WallToCorridorMiddle - brakingDistance)//) //Стената отпред е близко SideCorridorTreshold
   {
     digitalWrite(LedPin, LOW);
     currentState = 1; // turn
@@ -151,27 +151,25 @@ void loop()
       currentState = 3; // turn 90 degrees
     }
   }
-
   else if (sideDistance < 50) // В коридора сме!
-
   {
 
     digitalWrite(LedPin, HIGH);
-    if (24 < sideDistance && sideDistance < 26) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
+    if (  sideDistance  > 24 && sideDistance < 26) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
     {
       // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
       // от централната линия сме  - движение право напред
 
       currentState = 4; //Close to the centerline - go forwad
     }
-    else if (35 > sideDistance && sideDistance >= 26) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
+    else if ( sideDistance < 35 && sideDistance >= 26) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
     {
       // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
       // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
 
       currentState = 5; //Close to the other wall - hard turn to centerline
     }
-    else if (15 < sideDistance && sideDistance <= 24) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
+    else if (sideDistance > 15 && sideDistance <= 24) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
     {
       // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
       //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
@@ -226,10 +224,6 @@ void loop()
       moveForward();
       delay(200);
     }
-    // speedLeft = LeftSpeed * 1.0;
-    // speedRight = RightSpeed * 1.0;
-    // moveForward();
-    // delay(1500);
     directionCompensation = false;
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
