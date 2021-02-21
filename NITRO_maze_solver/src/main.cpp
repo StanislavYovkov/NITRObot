@@ -130,9 +130,9 @@ void loop()
 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
   Serial.println(sideDistance);
-  stopMoving();  //
-  delay(40);     //   частично движение по посока на робота
-  moveForward(); //
+  // stopMoving();  //
+  // delay(40);     //   частично движение по посока на робота
+  // moveForward(); //
 
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
 
@@ -165,28 +165,28 @@ void loop()
     }
     else if (sideDistance < 50) // В коридора сме!
     {
-      if (sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
+      if (sideDistance < 23 && sideDistance > 27)  //(sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
       {
         // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
         // от централната линия сме  - движение право напред
 
         currentState = 4; //Close to the centerline - go forwad
       }
-      else if (sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
+      else if (sideDistance >= 35) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
       {
         // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
         // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
 
         currentState = 5; //Close to the other wall - hard turn to centerline
       }
-      else if (sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
+      else if (sideDistance <= 15)  //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
       {
         // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
         //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
 
         currentState = 6; //Close to the wall we are following - hard turn to centerline
       }
-      else if (sideDistance > WallToCorridorMiddle + CenterLineTolerance && sideDistance < WallToCorridorMiddle + SharpTurnTreshold)
+      else if (sideDistance >27  && sideDistance < 35)  //(sideDistance > WallToCorridorMiddle + CenterLineTolerance && sideDistance < WallToCorridorMiddle + SharpTurnTreshold)
       {
         // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance
         //  от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
@@ -194,7 +194,7 @@ void loop()
         currentState = 7; //Close to the wall we are following - hard turn to centerline
       }
     }
-    else if (sideDistance < WallToCorridorMiddle - CenterLineTolerance && sideDistance > WallToCorridorMiddle - SharpTurnTreshold)
+    else if (sideDistance < 23 && sideDistance > 15) //(sideDistance < WallToCorridorMiddle - CenterLineTolerance && sideDistance > WallToCorridorMiddle - SharpTurnTreshold)
     {
       // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
       //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко наляво/надясно
@@ -303,8 +303,8 @@ void loop()
     break;
   }
 
-  stopMoving();  //
-  delay(40);     //  частично движение по посока на робота
+  // stopMoving();  //
+  // delay(40);     //  частично движение по посока на робота
   moveForward(); //
 }
 //==================================== VOID =====================================================
