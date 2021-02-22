@@ -74,8 +74,8 @@ Servo myservo;
 void moveForward();
 void turnRight();
 void moveBackward();
-void makeSlightLeftTurn();
-void turnSlightRight();
+void customTurnLeft();
+void customTurnRight();
 void stopMoving();
 float getDistance(int servoAngle, int delayAfterServoMovement); //read the Ultasonic Sensor pointing at the given servo angle
 
@@ -126,7 +126,7 @@ void loop()
   Serial.println(frontDistance);
   Serial.print("sideDistance - ");
   Serial.println(sideDistance);
-  
+
   if (frontDistance <= 25.0) //) //Стената отпред е близко SideCorridorTreshold
   {
     // Serial.println(frontDistance);
@@ -155,23 +155,24 @@ void loop()
     {
       // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold)
       // - завой на 90 градуса надясно/наляво
+      Serial.println("SET case =  3 ");
       currentState = 3; // turn 90 degrees
     }
-     else if (sideDistance > 24.0 && sideDistance < 26.0) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
+    else if (sideDistance > 21.0 && sideDistance < 29.0) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
     {
       // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
       // от централната линия сме  - движение право напред
       Serial.println("SET case = 4 ");
       currentState = 4; //Close to the centerline - go forwad
     }
-    else if (sideDistance < 35.0 && sideDistance >= 26.0) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
+    else if (sideDistance < 35.0 && sideDistance >= 29.0) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
     {
       // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
       // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
       Serial.println("SET case = 5 ");
       currentState = 5; //Close to the other wall - hard turn to centerline
     }
-    else if (sideDistance > 15.0 && sideDistance <= 24.0) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
+    else if (sideDistance > 15.0 && sideDistance <= 21.0) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
     {
       // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
       //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
@@ -192,13 +193,18 @@ void loop()
       Serial.println("SET case = 8 ");
       currentState = 8;
     }
+    if (frontDistance < 30.0 && sideDistance < 15.0)
+    {
+      currentState = 9;
+    }
   }
   switch (currentState)
   {
   case 1: /* завой на 90 градуса */
     Serial.println("case 1");
     stopMoving();
-    makeSlightLeftTurn();
+    speedLeft = LeftSpeed * 1.8;
+    customTurnLeft();
     delay(550);
     directionCompensation = false;
     speedLeft = LeftSpeed;
@@ -209,7 +215,7 @@ void loop()
   //       stopMoving();
   //   moveBackward();
   //   delay(200);
-  //   turnSlightRight();
+  //   customTurnRight();
   //   delay(500);
   //   directionCompensation = false;
   //   break;
@@ -227,7 +233,7 @@ void loop()
       speedLeft = 255;
       speedRight = 0;
       moveForward();
-      delay(200);
+      delay(170);
     }
     directionCompensation = false;
     speedLeft = LeftSpeed;
@@ -235,6 +241,8 @@ void loop()
     break;
   case 4:
     Serial.println("case 4");
+    stopMoving();
+    delay(20);
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     directionCompensation = false;
@@ -243,36 +251,42 @@ void loop()
   case 5:
     Serial.println("case 5");
     /* движение напред с остър завой наляво/надясно */
-    speedLeft = LeftSpeed * 2.5;
-    speedRight = RightSpeed * .8;
-    directionCompensation = true;
+    speedLeft = LeftSpeed * 2.0;
+    customTurnLeft();
+    delay(20);
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed ;
     break;
   case 6:
     Serial.println("case 6");
-    speedLeft = LeftSpeed * .8;
-    speedRight = RightSpeed * 2.1;
-    directionCompensation = true;
+    customTurnRight();
+    speedRight = RightSpeed *2.0;
+    delay(20);
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
     /* движение напред с остър завой надясно/наляво */
     break;
   case 7:
     Serial.println("case 7");
-    stopMoving();
-    while (sideDistance <= 15)
-    {
-      makeSlightLeftTurn();
-      sideDistance = getDistance(SideServoAngle, SideServoDelay);
-    }
+    speedLeft = LeftSpeed * 2.55;
+    customTurnLeft();
+    delay(20);
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     break;
   case 8:
     Serial.println("case 8");
-    stopMoving();
-    while (sideDistance >= 35)
-    {
-      turnSlightRight();
-      sideDistance = getDistance(SideServoAngle, SideServoDelay);
-    }
+    speedRight = RightSpeed * 2.55;
+    customTurnRight();    
+    delay(20);
+    speedLeft = LeftSpeed;
+    speedRight = RightSpeed;
+    break;
+  case 9:
+    Serial.println("case 9");
+    speedLeft = LeftSpeed * 1.6;
+    customTurnLeft();
+    delay(400);
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     break;
@@ -307,20 +321,20 @@ void moveBackward()
   analogWrite(RIGHT_BACK, abs(speedRight));
 }
 
-void makeSlightLeftTurn()
+void customTurnLeft()
 {
   analogWrite(LEFT_FOR, LOW);
-  analogWrite(LEFT_BACK, 130);
-  analogWrite(RIGHT_FOR, 130);
+  analogWrite(LEFT_BACK, speedLeft);
+  analogWrite(RIGHT_FOR, speedLeft);
   analogWrite(RIGHT_BACK, LOW);
 }
 
-void turnSlightRight()
+void customTurnRight()
 {
-  analogWrite(LEFT_FOR, 110);
+  analogWrite(LEFT_FOR, speedRight);
   analogWrite(LEFT_BACK, LOW);
   analogWrite(RIGHT_FOR, LOW);
-  analogWrite(RIGHT_BACK, 90);
+  analogWrite(RIGHT_BACK, speedRight);
 }
 
 void stopMoving()
