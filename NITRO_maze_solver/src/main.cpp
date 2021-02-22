@@ -117,10 +117,13 @@ void loop()
   // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
+  Serial.println();
+  Serial.print("ДЕСЕН - ");
   Serial.println(sideDistance);
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
+  Serial.print("ПРАВ - ");
   Serial.println(frontDistance);
-  if (frontDistance <= WallToCorridorMiddle - brakingDistance)//) //Стената отпред е близко SideCorridorTreshold
+  if (frontDistance <= 25)//) //Стената отпред е близко SideCorridorTreshold
   {
     digitalWrite(LedPin, LOW);
     currentState = 1; // turn
@@ -140,7 +143,7 @@ void loop()
     // }
     //----------------------------------------------
   }
-  else if (frontDistance >= 50) //Стената отпред е далече
+  if (frontDistance >= 50) //Стената отпред е далече
   {
     digitalWrite(LedPin, LOW);
     if (sideDistance >= 50) //SideCorridorTreshold
@@ -182,7 +185,7 @@ void loop()
       //  въртим се с while докаро изправим робота
       currentState = 7;
     }
-    else if (sideDistance >= 35)
+    else if (sideDistance >= 35 && sideDistance < 50)
     {
       // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
       //  въртим се с while докаро изправим робота
