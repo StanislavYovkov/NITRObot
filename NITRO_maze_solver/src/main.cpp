@@ -63,7 +63,7 @@ const int RightSpeed = 90;
 // Тук започват ГЛОБАЛНИТЕ променливи, които се използват в кода:
 // променливите започват с малка буква, а всяка следваща дума с главна буква
 // ....
-float maxDistance = 130;
+float maxDistance = 130.0;
 int speedLeft = LeftSpeed;
 int speedRight = RightSpeed;
 bool directionCompensation = false;
@@ -105,29 +105,35 @@ void loop()
 
   float frontDistance, sideDistance;
   // states:
-  int currentState; //? Правим проверките универсални - за следване на стена отдясно или отляво в зависимост от избрания WallFollowingSide - параметър по-горе.
-  // Състоянието (state) след прочитане на разстоянията може да бъде:
-  // 1 Приближили сме стена отпред (<= FrontDistanceTreshold), отдясно/отляво има стена (< SideCorridorTreshold) - завой на 180 градуса
-  // 2 Пррближили сме стена отпред (<= FrontDistanceTreshold), има коридор надясно/наляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
-  // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
-  // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance от централната линия сме - движение право напред
-  // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
-  // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой надясно/наляво
-  // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
-  // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
+  int currentState = 0; //? Правим проверките универсални - за следване на стена отдясно или отляво в зависимост от избрания WallFollowingSide - параметър по-горе.
+                        // Състоянието (state) след прочитане на разстоянията може да бъде:
+                        // 1 Приближили сме стена отпред (<= FrontDistanceTreshold), отдясно/отляво има стена (< SideCorridorTreshold) - завой на 180 градуса
+                        // 2 Пррближили сме стена отпред (<= FrontDistanceTreshold), има коридор надясно/наляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
+                        // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
+                        // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance от централната линия сме - движение право напред
+                        // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
+                        // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой надясно/наляво
+                        // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
+                        // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
-  Serial.println();
-  Serial.print("ДЕСЕН - ");
-  Serial.println(sideDistance);
-  frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
-  Serial.print("ПРАВ - ");
-  Serial.println(frontDistance);
-  if (frontDistance <= 25)//) //Стената отпред е близко SideCorridorTreshold
-  {
-    digitalWrite(LedPin, LOW);
-    currentState = 1; // turn
+  // Serial.println();
+  // Serial.print("ДЕСЕН - ");
 
+  frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
+
+  Serial.print("frontDistance - ");
+  Serial.println(frontDistance);
+  Serial.print("sideDistance - ");
+  Serial.println(sideDistance);
+  
+  if (frontDistance <= 25.0) //) //Стената отпред е близко SideCorridorTreshold
+  {
+    // Serial.println(frontDistance);
+    Serial.println("frontDistance <= 25.0");
+    digitalWrite(LedPin, HIGH);
+    currentState = 1; // turn
+                      // TODO ??????????????? mejdu 25 i 50 ??????????????????????????????
     //------------------------------------------
     //if (sideDistance < SideCorridorTreshold)
     //{
@@ -143,59 +149,54 @@ void loop()
     // }
     //----------------------------------------------
   }
-  if (frontDistance >= 50) //Стената отпред е далече
+  if (frontDistance >= 25.0) //Стената отпред е далече
   {
-    digitalWrite(LedPin, LOW);
-    if (sideDistance >= 50) //SideCorridorTreshold
+    if (sideDistance >= 50.0) //SideCorridorTreshold
     {
       // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold)
       // - завой на 90 градуса надясно/наляво
-
       currentState = 3; // turn 90 degrees
     }
-  }
-  else if (sideDistance < 50) // В коридора сме!
-  {
-
-    digitalWrite(LedPin, HIGH);
-    if (  sideDistance  > 24 && sideDistance < 26) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
+     else if (sideDistance > 24.0 && sideDistance < 26.0) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
     {
       // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
       // от централната линия сме  - движение право напред
-
+      Serial.println("SET case = 4 ");
       currentState = 4; //Close to the centerline - go forwad
     }
-    else if ( sideDistance < 35 && sideDistance >= 26) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
+    else if (sideDistance < 35.0 && sideDistance >= 26.0) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
     {
       // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
       // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
-
+      Serial.println("SET case = 5 ");
       currentState = 5; //Close to the other wall - hard turn to centerline
     }
-    else if (sideDistance > 15 && sideDistance <= 24) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
+    else if (sideDistance > 15.0 && sideDistance <= 24.0) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
     {
       // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
       //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
-
+      Serial.println("SET case = 6 ");
       currentState = 6; //Close to the wall we are following - hard turn to centerline
     }
-    else if (sideDistance <= 15)
+    else if (sideDistance <= 15.0)
     {
       // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
       //  въртим се с while докаро изправим робота
+      Serial.println("SET case = 7 ");
       currentState = 7;
     }
-    else if (sideDistance >= 35 && sideDistance < 50)
+    else if (sideDistance >= 35.0 && sideDistance < 50.0)
     {
       // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
       //  въртим се с while докаро изправим робота
+      Serial.println("SET case = 8 ");
       currentState = 8;
     }
   }
   switch (currentState)
   {
   case 1: /* завой на 90 градуса */
-    Serial.println(currentState);
+    Serial.println("case 1");
     stopMoving();
     makeSlightLeftTurn();
     delay(550);
@@ -204,6 +205,7 @@ void loop()
     speedRight = RightSpeed;
     break;
   // case 2: /* завой на 90 градуса надясно/наляво */
+  // Serial.println("case 2");
   //       stopMoving();
   //   moveBackward();
   //   delay(200);
@@ -212,7 +214,7 @@ void loop()
   //   directionCompensation = false;
   //   break;
   case 3: /* завой на 90 градуса надясно/наляво */
-    Serial.println(currentState);
+    Serial.println("case 3");
     stopMoving();
     moveBackward();
     delay(200);
@@ -232,28 +234,28 @@ void loop()
     speedRight = RightSpeed;
     break;
   case 4:
-    Serial.println(currentState);
+    Serial.println("case 4");
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     directionCompensation = false;
     /* движение право напред */
     break;
   case 5:
-    Serial.println(currentState);
+    Serial.println("case 5");
     /* движение напред с остър завой наляво/надясно */
     speedLeft = LeftSpeed * 2.5;
     speedRight = RightSpeed * .8;
     directionCompensation = true;
     break;
   case 6:
-    Serial.println(currentState);
+    Serial.println("case 6");
     speedLeft = LeftSpeed * .8;
     speedRight = RightSpeed * 2.1;
     directionCompensation = true;
     /* движение напред с остър завой надясно/наляво */
     break;
   case 7:
-    Serial.println(currentState);
+    Serial.println("case 7");
     stopMoving();
     while (sideDistance <= 15)
     {
@@ -264,7 +266,7 @@ void loop()
     speedRight = RightSpeed;
     break;
   case 8:
-    Serial.println(currentState);
+    Serial.println("case 8");
     stopMoving();
     while (sideDistance >= 35)
     {
