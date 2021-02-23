@@ -76,8 +76,10 @@ void moveBackward();
 void customTurnLeft();
 void customTurnRight();
 void stopMoving();
-void robotLeftTurn();
-void robotRightTurn();
+void robotTurnLeft();
+void robotTurnRight();
+void correctionTurnRight();
+void correctionTurnLeft();
 
 float getDistance(int servoAngle, int delayAfterServoMovement); //read the Ultasonic Sensor pointing at the given servo angle
 
@@ -119,7 +121,7 @@ void loop()
 
     if (frontDistance <= 15.0) //) //Стената отпред е близко SideCorridorTreshold
     {
-        currentState = 1; // turn 90 degrees
+        robotTurnLeft(); // turn 90 degrees
     }
     if (frontDistance >= 15.0) //Стената отпред е далече
     {
@@ -127,71 +129,47 @@ void loop()
 
         if (sideDistance >= 50.0) //Стената отдясно е далече
         {
-            currentState = 2; // turn 90 degrees
+            robotTurnRight(); // turn 90 degrees
         }
         /*else if (sideDistance > 21.0 && sideDistance < 29.0) 
          { 
-          // движение право напред
-           
+          // движение право напред           
          } */
 
         // Корекции на ъгълът на положение на робота
 
         else if (sideDistance < 50.0 && sideDistance >= 29.0) // Робота се намира в ляво от осовата линия
         {
-            if (sideDistance < 50.0 && sideDistance >= 29.0) // малка корекция
+            if (sideDistance < 50.0 && sideDistance >= 29.0) // малка корекция на дясно
             {
-                currentState = 3;
-                if (sideDistance < 50.0 && sideDistance >= 36.0) // средно голяма корекция
+                correctionTurnRight();
+                if (sideDistance < 50.0 && sideDistance >= 36.0) // средно голяма корекция на дясно
                 {
-                    currentState = 3;
-                    if (sideDistance < 50.0 && sideDistance >= 43.0) // голяма корекция
+                    correctionTurnRight();
+                    if (sideDistance < 50.0 && sideDistance >= 43.0) // голяма корекция на дясно
                     {
-                        currentState = 3;
+                        correctionTurnRight();
                     }
                 }
             }
         }
         else if (sideDistance < 21.0 && sideDistance >= 0) // Робота се намира в дясно от осовата линия
         {
-            if (sideDistance < 21.0 && sideDistance >= 0.0) // малка корекция
+            if (sideDistance < 21.0 && sideDistance >= 0.0) // малка корекция на ляво
             {
-                currentState = 4;
-                if (sideDistance < 14.0 && sideDistance >= 0.0) // средно голяма корекция
+                correctionTurnLeft();
+                if (sideDistance < 14.0 && sideDistance >= 0.0) // средно голяма корекция на ляво
                 {
-                    currentState = 4;
-                    if (sideDistance < 7.0 && sideDistance >= 0.0) // голяма корекция
+                    correctionTurnLeft();
+                    if (sideDistance < 7.0 && sideDistance >= 0.0) // голяма корекция на ляво
                     {
-                        currentState = 4;
+                        correctionTurnLeft();
                     }
                 }
             }
         }
     }
-    switch (currentState)
-    {
-    case 1: /* завой на 90 градуса наляво */
-
-        break;
-    case 2: /* завой на 90 градуса надясно */
-        break;
-    case 3:
-        Serial.println("case 5 Коригиращ завой надясно");
-        /* Завъртане на робота на надясно */
-        speedRight = RightSpeed * 2.55;
-        customTurnRight();
-        delay(100);
-        break;
-    case 4:
-        Serial.println("case 6 Коригиращ завой наляво");
-        /* Завъртане на робота на наляво */
-        speedLeft = LeftSpeed * 2.55;
-        customTurnLeft();
-        delay(100);
-        break;
-    default:
-        break;
-    }
+    
 }
 //==================================== VOID =====================================================
 
@@ -266,7 +244,7 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
     return distance;
 }
 
-void robotLeftTurn()
+void robotTurnLeft()
 {
     Serial.println("ЛЯВ ЗАВОЙ");
     moveBackward();
@@ -279,9 +257,8 @@ void robotLeftTurn()
     directionCompensation = false;
 }
 
-void robotRightTurn()
+void robotTurnRight()
 {
-
     Serial.println("ДЕСЕН ЗАВОЙ");
     //moveBackward();
     //delay(100);
@@ -309,6 +286,25 @@ void robotRightTurn()
     delay(100);
     directionCompensation = false;
 }
+
+void correctionTurnRight()
+{
+    Serial.println("case 5 Коригиращ завой надясно");
+    /* кратко завъртане на робота на надясно */
+    speedRight = RightSpeed * 2.55;
+    customTurnRight();
+    delay(100);
+}
+
+void correctionTurnLeft()
+{
+    Serial.println("case 6 Коригиращ завой наляво");
+    /* кратко завъртане на робота на наляво */
+    speedLeft = LeftSpeed * 2.55;
+    customTurnLeft();
+    delay(100);
+}
+
 // loop:
 // move_servo
 // slow_down
