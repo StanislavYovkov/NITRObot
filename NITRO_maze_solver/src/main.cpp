@@ -232,8 +232,8 @@ void loop()
     break;
   case 4:
     Serial.println("case 4");
-    stopMoving();
-    delay(20);
+    //stopMoving();
+    //delay(10);
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     moveForward();
@@ -337,11 +337,14 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
   moveForward();
   delay(35);
   stopMoving();
-  delay(40);
+  delay(20);
   moveForward();
   delay(35);
   stopMoving();
+  delay(20);
+  moveForward();
   delay(40);
+  stopMoving();
   //-----------------------
   pinMode(UltrasonicPin, OUTPUT);
   digitalWrite(UltrasonicPin, LOW);
