@@ -115,7 +115,6 @@ void loop()
                         // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой надясно/наляво
                         // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
                         // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
-
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
 
@@ -124,7 +123,7 @@ void loop()
   Serial.print("sideDistance - ");
   Serial.println(sideDistance);
 
-  if (frontDistance <= 25.0) //) //Стената отпред е близко SideCorridorTreshold
+  if (frontDistance <= 15.0) //) //Стената отпред е близко SideCorridorTreshold
   {
     digitalWrite(LedPin, HIGH);
     currentState = 1; // turn
@@ -196,11 +195,14 @@ void loop()
   switch (currentState)
   {
   case 1: /* завой на 90 градуса */
-    Serial.println("case 1");
-    stopMoving();
-    speedLeft = LeftSpeed * 1.8;
+    Serial.println("ЛЯВ ЗАВОЙ");
+    moveBackward();
+    delay(100);
+    speedLeft = LeftSpeed * 1.35;
     customTurnLeft();
-    delay(550);
+    delay(750);
+    moveBackward();
+    delay(100);
     directionCompensation = false;
     break;
   // case 2: /* завой на 90 градуса надясно/наляво */
@@ -213,64 +215,69 @@ void loop()
   //   directionCompensation = false;
   //   break;
   case 3: /* завой на 90 градуса надясно/наляво */
-    Serial.println("case 3");
-    stopMoving();
-    moveBackward();
-    delay(200);
-    for (size_t i = 0; i < 4; i++)
+    Serial.println("ДЕСЕН ЗАВОЙ");
+    //moveBackward();
+    //delay(100);
+    for (size_t i = 0; i < 8; i++)
     {
       speedLeft = LeftSpeed;
       speedRight = RightSpeed;
       moveForward();
       delay(20);
-      speedLeft = 255;
+      speedLeft = LeftSpeed * 1.4;
       speedRight = 0;
       moveForward();
       delay(170);
     }
+    for (size_t i = 0; i < 7; i++)
+    {
+      speedLeft = LeftSpeed;
+      speedRight = RightSpeed;
+      moveForward();
+      delay(35);
+      stopMoving();
+      delay(20);
+    }
+    moveBackward();
+    delay(100);
     directionCompensation = false;
     break;
   case 4:
-    Serial.println("case 4");
-    //stopMoving();
-    //delay(10);
-    speedLeft = LeftSpeed;
-    speedRight = RightSpeed;
-    moveForward();
-    directionCompensation = false;
+    Serial.println("case 4 - Движение НАПРАВО");
+
     /* движение право напред */
     break;
   case 5:
-    Serial.println("case 5");
+    Serial.println("case 5 Лек завой надясно");
     /* движение напред с остър завой наляво/надясно */
-    speedLeft = LeftSpeed * 2.0;
-    customTurnLeft();
-    delay(20);    
+    speedRight = RightSpeed * 2.55;
+    customTurnRight();
+    delay(50);
     break;
   case 6:
-    Serial.println("case 6");
-    customTurnRight();
-    speedRight = RightSpeed * 2.0;
-    delay(20);
+    Serial.println("case 6 Лек завой наляво");
+    speedLeft = LeftSpeed  * 2.55;
+    customTurnLeft();
+    delay(50);
     /* движение напред с остър завой надясно/наляво */
     break;
   case 7:
-    Serial.println("case 7");
+    Serial.println("case 7 Силнен завой наляво");
     speedLeft = LeftSpeed * 2.55;
     customTurnLeft();
-    delay(20);
+    delay(100);
     break;
   case 8:
-    Serial.println("case 8");
+    Serial.println("case 8 Силнен завой надясно");
     speedRight = RightSpeed * 2.55;
     customTurnRight();
-    delay(20);
+    delay(100);
     break;
   case 9:
     Serial.println("case 9");
     speedLeft = LeftSpeed * 1.6;
     customTurnLeft();
-    delay(400);
+    delay(300);
     break;
   default:
     break;
@@ -356,3 +363,8 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
   distance = pulseIn(UltrasonicPin, HIGH) / 58.00;
   return distance;
 }
+
+// loop:
+// move_servo
+// slow_down
+// read_sensor
