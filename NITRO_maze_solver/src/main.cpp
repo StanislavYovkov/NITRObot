@@ -72,7 +72,6 @@ Servo myservo;
 
 // Тук слагаме прототипите на функциите:
 void moveForward();
-void turnRight();
 void moveBackward();
 void customTurnLeft();
 void customTurnRight();
@@ -105,16 +104,7 @@ void loop()
 
   float frontDistance, sideDistance;
   // states:
-  int currentState = 0; //? Правим проверките универсални - за следване на стена отдясно или отляво в зависимост от избрания WallFollowingSide - параметър по-горе.
-                        // Състоянието (state) след прочитане на разстоянията може да бъде:
-                        // 1 Приближили сме стена отпред (<= FrontDistanceTreshold), отдясно/отляво има стена (< SideCorridorTreshold) - завой на 180 градуса
-                        // 2 Пррближили сме стена отпред (<= FrontDistanceTreshold), има коридор надясно/наляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
-                        // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold) - завой на 90 градуса надясно/наляво
-                        // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance от централната линия сме - движение право напред
-                        // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
-                        // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой надясно/наляво
-                        // 7 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + tolerance от централната линия (по-близо до лявата/дясната стена) сме - движение напред със завой леко наляво/надясно
-                        // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред със завой леко надясно/наляво
+  int currentState = 0;
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
 
@@ -126,70 +116,33 @@ void loop()
   if (frontDistance <= 15.0) //) //Стената отпред е близко SideCorridorTreshold
   {
     digitalWrite(LedPin, HIGH);
-    currentState = 1; // turn
-                      // TODO ??????????????? mejdu 25 i 50 ??????????????????????????????
-    //------------------------------------------
-    //if (sideDistance < SideCorridorTreshold)
-    //{
-    // 1 Приближили сме стена отпред (<= FrontDistanceTreshold), отдясно/отляво има стена (< SideCorridorTreshold)
-    // - завой на 90 градуса
-    //  currentState = 1; // turn 90 degrees
-    // }
-    // else if (sideDistance >= SideCorridorTreshold )
-    // {
-    // 2 Пррближили сме стена отпред (<= FrontDistanceTreshold), има коридор надясно/наляво (>= SideCorridorTreshold)
-    // - завой на 90 градуса надясно/наляво
-    //   currentState = 2; // turn 90 degrees
-    // }
-    //----------------------------------------------
+    currentState = 1;
   }
   if (frontDistance >= 25.0) //Стената отпред е далече
   {
     if (sideDistance >= 50.0) //SideCorridorTreshold
     {
-      // 3 Напред стената е далече (> FrontDistanceTreshold), има коридор в дясно/ляво (>= SideCorridorTreshold)
-      // - завой на 90 градуса надясно/наляво
-      Serial.println("SET case =  3 ");
       currentState = 3; // turn 90 degrees
     }
     else if (sideDistance > 21.0 && sideDistance < 29.0) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
     {
-      // 4 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), в рамките на +- CenterLineTolerance
-      // от централната линия сме  - движение право напред
-      Serial.println("SET case = 4 ");
       currentState = 4; //Close to the centerline - go forwad
     }
     else if (sideDistance < 35.0 && sideDistance >= 29.0) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
     {
-      // 5 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от + SharpTurnTreshold от
-      // централната линия (по-близо до лявата/дясната стена) сме - движение напред с остър завой наляво/надясно
-      Serial.println("SET case = 5 ");
       currentState = 5; //Close to the other wall - hard turn to centerline
     }
     else if (sideDistance > 15.0 && sideDistance <= 21.0) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
     {
-      // 6 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - SharpTurnTreshold
-      //  от централната линия сме (по-близо до дясната/лявата стена) сме - движение напред с остър завой наляво/надясно
-      Serial.println("SET case = 6 ");
       currentState = 6; //Close to the wall we are following - hard turn to centerline
     }
     else if (sideDistance <= 15.0)
     {
-      // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
-      //  въртим се с while докаро изправим робота
-      Serial.println("SET case = 7 ");
       currentState = 7;
     }
     else if (sideDistance >= 35.0 && sideDistance < 50.0)
     {
-      // 8 Има стена отдясно/отляво (< SideCorridorTreshold), напред е свободно (> FrontDistanceTreshold), на повече от - tolerance
-      //  въртим се с while докаро изправим робота
-      Serial.println("SET case = 8 ");
       currentState = 8;
-    }
-    if (frontDistance < 30.0 && sideDistance < 15.0)
-    {
-      currentState = 9;
     }
   }
   switch (currentState)
@@ -205,19 +158,8 @@ void loop()
     delay(100);
     directionCompensation = false;
     break;
-  // case 2: /* завой на 90 градуса надясно/наляво */
-  // Serial.println("case 2");
-  //       stopMoving();
-  //   moveBackward();
-  //   delay(200);
-  //   customTurnRight();
-  //   delay(500);
-  //   directionCompensation = false;
-  //   break;
   case 3: /* завой на 90 градуса надясно/наляво */
     Serial.println("ДЕСЕН ЗАВОЙ");
-    //moveBackward();
-    //delay(100);
     for (size_t i = 0; i < 8; i++)
     {
       speedLeft = LeftSpeed;
@@ -243,42 +185,29 @@ void loop()
     directionCompensation = false;
     break;
   case 4:
-    Serial.println("case 4 - Движение НАПРАВО");
-
-    /* движение право напред */
+    Serial.println("Движение НАПРАВО");
     break;
   case 5:
-    Serial.println("case 5 Лек завой надясно");
-    /* движение напред с остър завой наляво/надясно */
     speedRight = RightSpeed * 2.55;
     customTurnRight();
     delay(50);
     break;
   case 6:
-    Serial.println("case 6 Лек завой наляво");
-    speedLeft = LeftSpeed  * 2.55;
+    speedLeft = LeftSpeed * 2.55;
     customTurnLeft();
     delay(50);
-    /* движение напред с остър завой надясно/наляво */
     break;
   case 7:
-    Serial.println("case 7 Силнен завой наляво");
     speedLeft = LeftSpeed * 2.55;
     customTurnLeft();
     delay(100);
     break;
   case 8:
-    Serial.println("case 8 Силнен завой надясно");
     speedRight = RightSpeed * 2.55;
     customTurnRight();
     delay(100);
     break;
-  case 9:
-    Serial.println("case 9");
-    speedLeft = LeftSpeed * 1.6;
-    customTurnLeft();
-    delay(300);
-    break;
+
   default:
     break;
   }
@@ -291,14 +220,6 @@ void moveForward()
   analogWrite(LEFT_BACK, LOW);
   analogWrite(RIGHT_FOR, abs(speedRight));
   analogWrite(RIGHT_BACK, LOW);
-}
-
-void turnRight()
-{
-  analogWrite(LEFT_FOR, 180);
-  analogWrite(LEFT_BACK, LOW);
-  analogWrite(RIGHT_FOR, LOW);
-  analogWrite(RIGHT_BACK, 0);
 }
 
 void moveBackward()
@@ -333,12 +254,11 @@ void stopMoving()
   analogWrite(RIGHT_BACK, HIGH);
 }
 
-float getDistance(int servoAngle, int delayAfterServoMovement)
+float getDistance(int servoAngle, int delayAfterServoMovement) //35,20,35,20,40
 {
   float distance;
   myservo.write(servoAngle);
-  //delay(delayAfterServoMovement);
-  //---------------- забавено движение 150 millis.
+  //---------------------------150 millis
   speedLeft = LeftSpeed;
   speedRight = RightSpeed;
   moveForward();
