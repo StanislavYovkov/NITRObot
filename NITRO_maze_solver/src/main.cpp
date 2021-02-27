@@ -20,12 +20,10 @@
 #define RIGHT_FOR 6   // PWMA
 #define RIGHT_BACK 10 // DIRA  ---  Right
 
-// константите започват с главна буква, а всяка следваща дума с главна буква
 const int LeftIrAvoidancePin = 12;
 const int RightIrAvoidancePin = A5;
 const int UltrasonicPin = 3;
 const int RgbPin = 2;
-// и тези пинове трябва да са константи - не се променят
 const int ServoPin = 13;
 const int LedPin = 33;
 
@@ -37,7 +35,6 @@ const int brakingDistance = 10; // спирачен път в см.
 const int MazeCorridorWidth = 50; //   ШИРОЧИНАТА НА КОРИДОРЕ  Е 3 ШИРИНИ НА РОБОТА = 50см. (robotWidth * 3) + 2;
 
 // Tresholds:
-
 const float FrontDistanceTreshold = MazeCorridorWidth / 2 + brakingDistance;
 const float WallToCorridorMiddle = MazeCorridorWidth / 2;
 const float SideCorridorTreshold = MazeCorridorWidth;
@@ -60,17 +57,13 @@ const int SideServoDelay = 150;
 const int LeftSpeed = 90;
 const int RightSpeed = 90;
 
-// Тук започват ГЛОБАЛНИТЕ променливи, които се използват в кода:
-// променливите започват с малка буква, а всяка следваща дума с главна буква
-// ....
 float maxDistance = 130.0;
 int speedLeft = LeftSpeed;
 int speedRight = RightSpeed;
 bool directionCompensation = false;
-// Тук инициализираме обектите:
+
 Servo myservo;
 
-// Тук слагаме прототипите на функциите:
 void moveForward();
 void moveBackward();
 void customTurnLeft();
@@ -103,51 +96,42 @@ void loop()
 {
 
   float frontDistance, sideDistance;
-  // states:
-  int currentState = 0;
+  
+  int currentState = 0; 
   sideDistance = getDistance(SideServoAngle, SideServoDelay);
   frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
 
-  Serial.print("frontDistance - ");
-  Serial.println(frontDistance);
-  Serial.print("sideDistance - ");
-  Serial.println(sideDistance);
-
-  if (frontDistance <= 15.0) //) //Стената отпред е близко SideCorridorTreshold
+  if (frontDistance <= 15.0) //Стената отпред е близко 
   {
     digitalWrite(LedPin, HIGH);
     currentState = 1;
   }
   if (frontDistance >= 25.0) //Стената отпред е далече
   {
-    if (sideDistance >= 50.0) //SideCorridorTreshold
+    if (sideDistance >= 50.0) //Стената отдясно е далече
     {
-      currentState = 3; // turn 90 degrees
+      currentState = 2; 
     }
-    else if (sideDistance > 21.0 && sideDistance < 29.0) //(sideDistance < 23 && sideDistance > 27sideDistance < WallToCorridorMiddle + CenterLineTolerance && sideDistance > WallToCorridorMiddle - CenterLineTolerance)
-    {
-      currentState = 4; //Close to the centerline - go forwad
+    else if (sideDistance < 35.0 && sideDistance >= 29.0) //    |_________|__ROBOT__|_________|_________|_________|    - робота се намита тук!
+    {                                                     //    50sm      35sm      29sm      21sm      15sm      0sm
+      currentState = 3;                                   
     }
-    else if (sideDistance < 35.0 && sideDistance >= 29.0) //(sideDistance >= WallToCorridorMiddle + SharpTurnTreshold)
-    {
-      currentState = 5; //Close to the other wall - hard turn to centerline
+    else if (sideDistance > 15.0 && sideDistance <= 21.0) //    |_________|_________|_________|__ROBOT__|_________|    - робота се намита тук!
+    {                                                     //    50sm      35sm      29sm      21sm      15sm      0sm
+      currentState = 4; 
     }
-    else if (sideDistance > 15.0 && sideDistance <= 21.0) //(sideDistance <= WallToCorridorMiddle - SharpTurnTreshold)
-    {
-      currentState = 6; //Close to the wall we are following - hard turn to centerline
+    else if (sideDistance <= 15.0)                        //    |_________|_________|_________|_________|__ROBOT__|    - робота се намита тук!
+    {                                                     //    50sm      35sm      29sm      21sm      15sm      0sm
+      currentState = 5;
     }
-    else if (sideDistance <= 15.0)
-    {
-      currentState = 7;
-    }
-    else if (sideDistance >= 35.0 && sideDistance < 50.0)
-    {
-      currentState = 8;
-    }
-  }
+    else if (sideDistance >= 35.0 && sideDistance < 50.0) //    |__ROBOT__|_________|_________|_________|_________|    - робота се намита тук!
+    {                                                     //    50sm      35sm      29sm      21sm      15sm      0sm
+      currentState = 6;
+    }// ако не са изпълнени 4-те условия робота cе намира тук   |_________|_________|__ROBOT__|_________|_________|    - робота се се движи право напред!
+  }                                                       //    50sm      35sm      29sm      21sm      15sm      0sm
   switch (currentState)
   {
-  case 1: /* завой на 90 градуса */
+  case 1: // завой на 90 градуса на ляво
     Serial.println("ЛЯВ ЗАВОЙ");
     moveBackward();
     delay(100);
@@ -158,7 +142,7 @@ void loop()
     delay(100);
     directionCompensation = false;
     break;
-  case 3: /* завой на 90 градуса надясно/наляво */
+  case 2: // завой на 90 градуса надясно
     Serial.println("ДЕСЕН ЗАВОЙ");
     for (size_t i = 0; i < 8; i++)
     {
@@ -184,25 +168,22 @@ void loop()
     delay(100);
     directionCompensation = false;
     break;
-  case 4:
-    Serial.println("Движение НАПРАВО");
-    break;
-  case 5:
+  case 3:  // леко въртене на дясно
     speedRight = RightSpeed * 2.55;
     customTurnRight();
     delay(50);
     break;
-  case 6:
+  case 4:  // леко въртене на ляво
     speedLeft = LeftSpeed * 2.55;
     customTurnLeft();
     delay(50);
     break;
-  case 7:
+  case 5:  // силно въртене на Ляво
     speedLeft = LeftSpeed * 2.55;
     customTurnLeft();
     delay(100);
     break;
-  case 8:
+  case 6:   // силно въртене на дясно
     speedRight = RightSpeed * 2.55;
     customTurnRight();
     delay(100);
@@ -214,7 +195,7 @@ void loop()
 }
 //==================================== VOID =====================================================
 
-void moveForward()
+void moveForward()    //движение напред
 {
   analogWrite(LEFT_FOR, abs(speedLeft));
   analogWrite(LEFT_BACK, LOW);
@@ -222,7 +203,7 @@ void moveForward()
   analogWrite(RIGHT_BACK, LOW);
 }
 
-void moveBackward()
+void moveBackward()   //движение назад
 {
   analogWrite(LEFT_FOR, LOW);
   analogWrite(LEFT_BACK, abs(speedLeft));
@@ -230,7 +211,7 @@ void moveBackward()
   analogWrite(RIGHT_BACK, abs(speedRight));
 }
 
-void customTurnLeft()
+void customTurnLeft()  //въртене наляво
 {
   analogWrite(LEFT_FOR, LOW);
   analogWrite(LEFT_BACK, speedLeft);
@@ -238,7 +219,7 @@ void customTurnLeft()
   analogWrite(RIGHT_BACK, LOW);
 }
 
-void customTurnRight()
+void customTurnRight()  //ръртене надясно
 {
   analogWrite(LEFT_FOR, speedRight);
   analogWrite(LEFT_BACK, LOW);
@@ -246,7 +227,7 @@ void customTurnRight()
   analogWrite(RIGHT_BACK, speedRight);
 }
 
-void stopMoving()
+void stopMoving()   // спиране на движението
 {
   analogWrite(LEFT_FOR, HIGH);
   analogWrite(LEFT_BACK, HIGH);
