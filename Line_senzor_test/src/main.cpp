@@ -7,7 +7,7 @@
 // If the angle is too great (over about 15 degrees) not enough of the sound
 // bounces back for it to get a reliable range.
 
-#include <Servo.h>
+//#include <Servo.h>
 
 #define LEFT_FOR 9    // PWMB
 #define LEFT_BACK 5   // DIRB  ---  Left
@@ -58,8 +58,8 @@ const int SideServoAngle = FrontServoAngle + WallFollowingSide; //(0 or 180 degr
 const int FrontServoDelay = 150;
 const int SideServoDelay = 150;
 
-const int LeftSpeed = 80;
-const int RightSpeed = 80;
+const int LeftSpeed = 85;
+const int RightSpeed = 85;
 
 float maxDistance = 130.0;
 int speedLeft = LeftSpeed;
@@ -67,7 +67,7 @@ int speedRight = RightSpeed;
 bool directionCompensation = false;
 boolean leftDeviation = false;
 boolean rightDeviation = false;
-Servo myservo;
+//Servo myservo;
 
 void moveForward();
 void moveBackward();
@@ -96,8 +96,8 @@ void setup()
   pinMode(UltrasonicPin, OUTPUT);
   pinMode(LedPin, OUTPUT);
   Serial.begin(9600);
-  myservo.attach(ServoPin);
-  myservo.write(90); //Move the servo to center position
+ // myservo.attach(ServoPin);
+//  myservo.write(90); //Move the servo to center position
 
   // moveForward();
   delay(500);
@@ -108,7 +108,7 @@ void setup()
 void loop()
 {
 
-  float frontDistance, sideDistance;
+ // float frontDistance, sideDistance;
   int leftEdge, left, mid, right, rightEdge;
   int currentState = 0;
   // sideDistance = getDistance(SideServoAngle, SideServoDelay);
@@ -120,7 +120,7 @@ void loop()
 
   leftEdge = digitalRead(LN_SENS_PIN_RIGHTEDGE);
   rightEdge = digitalRead(LN_SENS_PIN_LEFTEDGE);
-
+/*
   Serial.print("LeftEdge: ");
   Serial.print(leftEdge);
   Serial.print(" Left: ");
@@ -131,8 +131,8 @@ void loop()
   Serial.print(right);
   Serial.print(" RightEdge: ");
   Serial.println(rightEdge);
-  delay(500);
 
+*/
   /*  if (frontDistance <= 15.0) //Стената отпред е близко
   {
     digitalWrite(LedPin, HIGH);
@@ -248,7 +248,7 @@ void loop()
   {
     currentState = 5;
   }
-  else if ((leftEdge == 0) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && rightDeviation) // 1 1 1 1 1
+  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && rightDeviation) // 1 1 1 1 1
   {
     currentState = 6;
   }
@@ -268,7 +268,7 @@ void loop()
   {
     currentState = 10;
   }
-  else if ((leftEdge == 0) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && leftDeviation) // 1 1 1 1 1
+  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && leftDeviation) // 1 1 1 1 1
   {
     currentState = 11;
   }
@@ -283,69 +283,75 @@ void loop()
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     moveForward();
+    Serial.println("case1");     
     break;
   case 2:
-    speedLeft = LeftSpeed * .5;
-    speedRight = RightSpeed * 1.0;
+    speedLeft = LeftSpeed * 0.6;
+    speedRight = RightSpeed * 1.0; 
     moveForward();
+     Serial.println("case2");
     break;
   case 3:
-    speedLeft = LeftSpeed * .5;
-    speedRight = RightSpeed * 1.3;
+    speedLeft = LeftSpeed * 0.5;
+    speedRight = RightSpeed * 1.5;  
     moveForward();
+     Serial.println("case3");
     break;
   case 4:
-    speedLeft = LeftSpeed * .5;
-    speedRight = RightSpeed * 1.6;
+    speedLeft = LeftSpeed *0.4;
+    speedRight = RightSpeed * 2.0;  
     moveForward();
-    break;
   case 5:
-    speedLeft = LeftSpeed * .5;
-    speedRight = RightSpeed * 1.9;
+    speedLeft = LeftSpeed * 0.3;
+    speedRight = RightSpeed *2.6;
     moveForward();
-    rightDeviation = true;
+    rightDeviation = !rightDeviation;
+     Serial.println("case5");
     break;
-  case 6:
-    speedLeft = LeftSpeed * .5;
-    speedRight = RightSpeed * 2.1;
-    moveForward();
-    rightDeviation = false;
-    break;
+ case 6:
+  speedLeft = LeftSpeed * 0.2;
+  speedRight = 255;
+   moveForward();
+    Serial.println("case6");  
+  break;
   case 7:
     speedLeft = LeftSpeed * 1.0;
-    speedRight = RightSpeed * .5;
+    speedRight = RightSpeed * 0.6;
     moveForward();
+     Serial.println("case7");
     break;
   case 8:
-    speedLeft = LeftSpeed * 1.3;
-    speedRight = RightSpeed * .5;
+    speedLeft = LeftSpeed * 1.5;
+    speedRight = RightSpeed * 0.5;
     moveForward();
+     Serial.println("case8");
     break;
   case 9:
-    speedLeft = LeftSpeed * 1.6;
-    speedRight = RightSpeed * .5;
-    moveForward();
+    speedLeft = LeftSpeed * 2.0;
+    speedRight = RightSpeed * 0.4;
+    moveForward(); 
+     leftDeviation = false;
+      Serial.println("case9");
     break;
-  case 10:
-    speedLeft = LeftSpeed * 1.9;
-    speedRight = RightSpeed * .5;
+  case 10:      
+    speedLeft = LeftSpeed * 2.6;
+    speedRight = RightSpeed * 0.3;
     moveForward();
-    rightDeviation = true;
+    leftDeviation = !leftDeviation;
+    Serial.println("case10");
     break;
-  case 11:
-    speedLeft = LeftSpeed * 2.1;
-    speedRight = RightSpeed * .5;
+ case 11:
+    speedLeft = 255;
+    speedRight = RightSpeed * 0.2;
     moveForward();
-    rightDeviation = false;
+    Serial.println("case11");
     break;
-  case 12:
+ case 12:
     stopMoving();
     break;
   default:
     break;
   }
-
-  //qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 }
 
 //==================================== FUNCTIONS =====================================================
@@ -389,7 +395,7 @@ void stopMoving() // Stop movement
   analogWrite(RIGHT_FOR, HIGH);
   analogWrite(RIGHT_BACK, HIGH);
 }
-
+/*
 float getDistance(int servoAngle, int delayAfterServoMovement)
 {
   float distance;
@@ -409,7 +415,7 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
   moveForward();
   delay(40);
   stopMoving();
-  -----------------------*/
+  -----------------------
   pinMode(UltrasonicPin, OUTPUT);
   digitalWrite(UltrasonicPin, LOW);
   delayMicroseconds(2);
@@ -419,4 +425,4 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
   pinMode(UltrasonicPin, INPUT);
   distance = pulseIn(UltrasonicPin, HIGH) / 58.00;
   return distance;
-}
+}*/
