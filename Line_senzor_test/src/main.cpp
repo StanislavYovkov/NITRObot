@@ -1,4 +1,4 @@
-//Line_following_5_sensors
+//Line_following_test
 #include <Arduino.h>
 
 // The rangefinders work well to show the distance to objects from around
