@@ -58,15 +58,14 @@ const int SideServoAngle = FrontServoAngle + WallFollowingSide; //(0 or 180 degr
 const int FrontServoDelay = 150;
 const int SideServoDelay = 150;
 
-const int LeftSpeed = 85;
-const int RightSpeed = 85;
+const int LeftSpeed = 95;
+const int RightSpeed = 95;
 
 float maxDistance = 130.0;
 int speedLeft = LeftSpeed;
 int speedRight = RightSpeed;
 bool directionCompensation = false;
-boolean leftDeviation = false;
-boolean rightDeviation = false;
+
 //Servo myservo;
 
 void moveForward();
@@ -75,6 +74,12 @@ void turnLeft();
 void turnRight();
 void stopMoving();
 float getDistance(int servoAngle, int delayAfterServoMovement); //read the Ultasonic Sensor pointing at the given servo angle
+
+int left();
+int mid();
+int right();
+int leftEdge();
+int rightEdge();
 
 //-----------------------------------------------
 
@@ -96,8 +101,8 @@ void setup()
   pinMode(UltrasonicPin, OUTPUT);
   pinMode(LedPin, OUTPUT);
   Serial.begin(9600);
- // myservo.attach(ServoPin);
-//  myservo.write(90); //Move the servo to center position
+  // myservo.attach(ServoPin);
+  //  myservo.write(90); //Move the servo to center position
 
   // moveForward();
   delay(500);
@@ -108,19 +113,13 @@ void setup()
 void loop()
 {
 
- // float frontDistance, sideDistance;
-  int leftEdge, left, mid, right, rightEdge;
+  // float frontDistance, sideDistance;
+
   int currentState = 0;
   // sideDistance = getDistance(SideServoAngle, SideServoDelay);
   //frontDistance = getDistance(FrontServoAngle, FrontServoDelay);
 
-  left = digitalRead(LN_SENS_PIN_RIGHT);
-  mid = digitalRead(LN_SENS_PIN_MIDDLE);
-  right = digitalRead(LN_SENS_PIN_LEFT);
-
-  leftEdge = digitalRead(LN_SENS_PIN_RIGHTEDGE);
-  rightEdge = digitalRead(LN_SENS_PIN_LEFTEDGE);
-/*
+  /*
   Serial.print("LeftEdge: ");
   Serial.print(leftEdge);
   Serial.print(" Left: ");
@@ -228,53 +227,45 @@ void loop()
   }  */
   //QQQQQQQQQQQqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 
-  if ((leftEdge == 1) && (left == 1) && (mid == 0) && (right == 1) && (rightEdge == 1)) //     1 1 0 1 1
+  if ((leftEdge() == 1) && (left() == 1) && (mid() == 0) && (right() == 1) && (rightEdge() == 1)) //                1 1 0 1 1
   {
     currentState = 1;
   }
-  else if ((leftEdge == 1) && (left == 0) && (mid == 0) && (right == 1) && (rightEdge == 1)) //1 0 0 1 1
+  else if ((leftEdge() == 1) && (left() == 0) && (mid() == 0) && (right() == 1) && (rightEdge() == 1)) //           1 0 0 1 1
   {
     currentState = 2;
   }
-  else if ((leftEdge == 1) && (left == 0) && (mid == 1) && (right == 1) && (rightEdge == 1)) // 1 0 1 1 1
+  else if ((leftEdge() == 1) && (left() == 0) && (mid() == 1) && (right() == 1) && (rightEdge() == 1)) //            1 0 1 1 1
   {
     currentState = 3;
   }
-  else if ((leftEdge == 0) && (left == 0) && (mid == 1) && (right == 1) && (rightEdge == 1)) // 0 0 1 1 1
+  else if ((leftEdge() == 0) && (left() == 0) && (mid() == 1) && (right() == 1) && (rightEdge() == 1)) //            0 0 1 1 1
   {
     currentState = 4;
   }
-  else if ((leftEdge == 0) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1)) // 0 1 1 1 1
+  else if ((leftEdge() == 0) && (left() == 1) && (mid() == 1) && (right() == 1) && (rightEdge() == 1)) //            0 1 1 1 1
   {
     currentState = 5;
   }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && rightDeviation) // 1 1 1 1 1
+  else if ((leftEdge() == 1) && (left() == 1) && (mid() == 0) && (right() == 0) && (rightEdge() == 1)) //            1 1 0 0 1
   {
     currentState = 6;
   }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 0) && (right == 0) && (rightEdge == 1)) // 1 1 0 0 1
+  else if ((leftEdge() == 1) && (left() == 1) && (mid() == 1) && (right() == 0) && (rightEdge() == 1)) //            1 1 1 0 1
   {
     currentState = 7;
   }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 0) && (rightEdge == 1)) // 1 1 1 0 1
+  else if ((leftEdge() == 1) && (left() == 1) && (mid() == 1) && (right() == 0) && (rightEdge() == 0)) //            1 1 1 0 0
   {
     currentState = 8;
   }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 0) && (rightEdge == 0)) // 1 1 1 0 0
+  else if ((leftEdge() == 1) && (left() == 1) && (mid() == 1) && (right() == 1) && (rightEdge() == 0)) //            1 1 1 1 0
   {
     currentState = 9;
   }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 0)) // 1 1 1 1 0
+  else if ((leftEdge() == 0) && (left() == 0) && (mid() == 0) && (right() == 0) && (rightEdge() == 0)) //            0 0 0 0 0
   {
     currentState = 10;
-  }
-  else if ((leftEdge == 1) && (left == 1) && (mid == 1) && (right == 1) && (rightEdge == 1) && leftDeviation) // 1 1 1 1 1
-  {
-    currentState = 11;
-  }
-  else if ((leftEdge == 0) && (left == 0) && (mid == 0) && (right == 0) && (rightEdge == 0)) // 0 0 0 0 0
-  {
-    currentState = 12;
   }
 
   switch (currentState)
@@ -283,71 +274,57 @@ void loop()
     speedLeft = LeftSpeed;
     speedRight = RightSpeed;
     moveForward();
-    Serial.println("case1");     
+    Serial.println("case1");
     break;
   case 2:
-    speedLeft = LeftSpeed * 0.6;
-    speedRight = RightSpeed * 1.0; 
+    speedLeft = LeftSpeed * 0.4;
+    speedRight = RightSpeed * 1.0;
     moveForward();
-     Serial.println("case2");
+    Serial.println("case2");
     break;
   case 3:
-    speedLeft = LeftSpeed * 0.5;
-    speedRight = RightSpeed * 1.5;  
+    speedLeft = LeftSpeed * 0.3;
+    speedRight = RightSpeed * 1.6;
     moveForward();
-     Serial.println("case3");
+    Serial.println("case3");
     break;
   case 4:
-    speedLeft = LeftSpeed *0.4;
-    speedRight = RightSpeed * 2.0;  
+    speedLeft = LeftSpeed * 0.2;
+    speedRight = RightSpeed * 2.0;
     moveForward();
   case 5:
-    speedLeft = LeftSpeed * 0.3;
-    speedRight = RightSpeed *2.6;
+    speedLeft = LeftSpeed * 0.1;
+    speedRight = RightSpeed * 2.6;
     moveForward();
-    rightDeviation = !rightDeviation;
-     Serial.println("case5");
+    Serial.println("case5");
     break;
- case 6:
-  speedLeft = LeftSpeed * 0.2;
-  speedRight = 255;
-   moveForward();
-    Serial.println("case6");  
-  break;
-  case 7:
+  case 6:
     speedLeft = LeftSpeed * 1.0;
-    speedRight = RightSpeed * 0.6;
-    moveForward();
-     Serial.println("case7");
-    break;
-  case 8:
-    speedLeft = LeftSpeed * 1.5;
-    speedRight = RightSpeed * 0.5;
-    moveForward();
-     Serial.println("case8");
-    break;
-  case 9:
-    speedLeft = LeftSpeed * 2.0;
     speedRight = RightSpeed * 0.4;
-    moveForward(); 
-     leftDeviation = false;
-      Serial.println("case9");
+    moveForward();
+    Serial.println("case7");
     break;
-  case 10:      
-    speedLeft = LeftSpeed * 2.6;
+  case 7:
+    speedLeft = LeftSpeed * 1.6;
     speedRight = RightSpeed * 0.3;
     moveForward();
-    leftDeviation = !leftDeviation;
-    Serial.println("case10");
+    Serial.println("case8");
     break;
- case 11:
-    speedLeft = 255;
+  case 8:
+    speedLeft = LeftSpeed * 2.0;
     speedRight = RightSpeed * 0.2;
     moveForward();
-    Serial.println("case11");
+    Serial.println("case9");
     break;
- case 12:
+  case 9:
+    speedLeft = LeftSpeed * 2.6;
+    speedRight = RightSpeed * 0.1;
+    moveForward();
+    Serial.println("case10");
+    break;
+  case 10:
     stopMoving();
+    delay(1000);
     break;
   default:
     break;
@@ -426,3 +403,38 @@ float getDistance(int servoAngle, int delayAfterServoMovement)
   distance = pulseIn(UltrasonicPin, HIGH) / 58.00;
   return distance;
 }*/
+
+int left()
+{
+  int distance;
+  distance = digitalRead(LN_SENS_PIN_RIGHT);
+  return distance;
+}
+
+int mid()
+{
+  int distance;
+  distance = digitalRead(LN_SENS_PIN_MIDDLE);
+  return distance;
+}
+
+int right()
+{
+  int distance;
+  distance = digitalRead(LN_SENS_PIN_LEFT);
+  return distance;
+}
+
+int leftEdge()
+{
+  int distance;
+  distance = digitalRead(LN_SENS_PIN_RIGHTEDGE);
+  return distance;
+}
+
+int rightEdge()
+{
+  int distance;
+  distance = digitalRead(LN_SENS_PIN_LEFTEDGE);
+  return distance;
+}
